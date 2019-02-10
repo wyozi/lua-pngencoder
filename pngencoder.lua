@@ -21,11 +21,11 @@ function Png:write(pixels)
     local count = #pixels  -- Byte count
     local pixelPointer = 1
     while count > 0 do
-		if self.positionY >= self.height then
+        if self.positionY >= self.height then
             error("All image pixels already written")
         end
 
-		if self.deflateFilled == 0 then -- Start DEFLATE block
+        if self.deflateFilled == 0 then -- Start DEFLATE block
             local size = DEFLATE_MAX_BLOCK_SIZE;
             if (self.uncompRemain < size) then
                 size = self.uncompRemain
@@ -42,43 +42,43 @@ function Png:write(pixels)
         end
         assert(self.positionX < self.lineSize and self.deflateFilled < DEFLATE_MAX_BLOCK_SIZE);
 
-		if (self.positionX == 0) then  -- Beginning of line - write filter method byte
+        if (self.positionX == 0) then  -- Beginning of line - write filter method byte
             local b = {0}
             self:writeBytes(b)
-			self:crc32(b, 1, 1)
-			self:adler32(b, 1, 1)
-			self.positionX = self.positionX + 1
-			self.uncompRemain = self.uncompRemain - 1
+            self:crc32(b, 1, 1)
+            self:adler32(b, 1, 1)
+            self.positionX = self.positionX + 1
+            self.uncompRemain = self.uncompRemain - 1
             self.deflateFilled = self.deflateFilled + 1
         else -- Write some pixel bytes for current line
-			local n = DEFLATE_MAX_BLOCK_SIZE - self.deflateFilled;
-			if (self.lineSize - self.positionX < n) then
+            local n = DEFLATE_MAX_BLOCK_SIZE - self.deflateFilled;
+            if (self.lineSize - self.positionX < n) then
                 n = self.lineSize - self.positionX
             end
-			if (count < n) then
+            if (count < n) then
                 n = count;
             end
             assert(n > 0);
-            
+
             self:writeBytes(pixels, pixelPointer, n)
-			
-			-- Update checksums
-			self:crc32(pixels, pixelPointer, n);
-			self:adler32(pixels, pixelPointer, n);
-			
-			-- Increment positions
-			count = count - n;
-			pixelPointer = pixelPointer + n;
-			self.positionX = self.positionX + n;
-			self.uncompRemain = self.uncompRemain - n;
-			self.deflateFilled = self.deflateFilled + n;
+
+            -- Update checksums
+            self:crc32(pixels, pixelPointer, n);
+            self:adler32(pixels, pixelPointer, n);
+
+            -- Increment positions
+            count = count - n;
+            pixelPointer = pixelPointer + n;
+            self.positionX = self.positionX + n;
+            self.uncompRemain = self.uncompRemain - n;
+            self.deflateFilled = self.deflateFilled + n;
         end
 
-		if (self.deflateFilled >= DEFLATE_MAX_BLOCK_SIZE) then
+        if (self.deflateFilled >= DEFLATE_MAX_BLOCK_SIZE) then
             self.deflateFilled = 0; -- End current block
         end
 
-		if (self.positionX == self.lineSize) then  -- Increment line
+        if (self.positionX == self.lineSize) then  -- Increment line
             self.positionX = 0;
             self.positionY = self.positionY + 1;
             if (self.positionY == self.height) then -- Reached end of pixels
@@ -90,10 +90,10 @@ function Png:write(pixels)
                     0x49, 0x45, 0x4E, 0x44,
                     0xAE, 0x42, 0x60, 0x82,
                 };
-                putBigUint32(self.adler, footer, 1);
-                self:crc32(footer, 1, 4);
-                putBigUint32(self.crc, footer, 5);
-                self:writeBytes(footer)
+            putBigUint32(self.adler, footer, 1);
+            self:crc32(footer, 1, 4);
+            putBigUint32(self.crc, footer, 5);
+            self:writeBytes(footer)
             end
         end
     end
@@ -103,21 +103,21 @@ function Png:crc32(data, index, len)
     self.crc = bit.bnot(self.crc)
     for i=index,index+len-1 do
         local byte = data[i]
-		for j=0,7 do  -- Inefficient bitwise implementation, instead of table-based
-			local nbit = bit.band(bit.bxor(self.crc, bit.rshift(byte, j)), 1);
-			self.crc = bit.bxor(bit.rshift(self.crc, 1), bit.band((-nbit), 0xEDB88320));
+        for j=0,7 do  -- Inefficient bitwise implementation, instead of table-based
+            local nbit = bit.band(bit.bxor(self.crc, bit.rshift(byte, j)), 1);
+            self.crc = bit.bxor(bit.rshift(self.crc, 1), bit.band((-nbit), 0xEDB88320));
         end
     end
-	self.crc = bit.bnot(self.crc)
+    self.crc = bit.bnot(self.crc)
 end
 function Png:adler32(data, index, len)
     local s1 = bit.band(self.adler, 0xFFFF)
-	local s2 = bit.rshift(self.adler, 16)
-	for i=index,index+len-1 do
-		s1 = (s1 + data[i]) % 65521
-		s2 = (s2 + s1) % 65521
+    local s2 = bit.rshift(self.adler, 16)
+    for i=index,index+len-1 do
+        s1 = (s1 + data[i]) % 65521
+        s2 = (s2 + s1) % 65521
     end
-	self.adler = bit.bor(bit.lshift(s2, 16), s1)
+    self.adler = bit.bor(bit.lshift(s2, 16), s1)
 end
 
 local function begin(width, height)
@@ -131,10 +131,10 @@ local function begin(width, height)
 
     local numBlocks = math.ceil(state.uncompRemain / DEFLATE_MAX_BLOCK_SIZE)
 
-	-- 5 bytes per DEFLATE uncompressed block header, 2 bytes for zlib header, 4 bytes for zlib Adler-32 footer
-	local idatSize = numBlocks * 5 + 6
+    -- 5 bytes per DEFLATE uncompressed block header, 2 bytes for zlib header, 4 bytes for zlib Adler-32 footer
+    local idatSize = numBlocks * 5 + 6
     idatSize = idatSize + state.uncompRemain;
-    
+
     -- TODO check if idatSize too big
 
     local header = {  -- 43 bytes long
@@ -162,13 +162,13 @@ local function begin(width, height)
     putBigUint32(state.crc, header, 30)
     state:writeBytes(header)
 
-	state.crc = 0
-	state:crc32(header, 38, 6);  -- 0xD7245B6B
-	state.adler = 1
-	
-	state.positionX = 0
-	state.positionY = 0
-	state.deflateFilled = 0
+    state.crc = 0
+    state:crc32(header, 38, 6);  -- 0xD7245B6B
+    state.adler = 1
+
+    state.positionX = 0
+    state.positionY = 0
+    state.deflateFilled = 0
 
     return state
 end
