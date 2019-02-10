@@ -89,11 +89,12 @@ function Png:write(pixels)
                     0x00, 0x00, 0x00, 0x00,
                     0x49, 0x45, 0x4E, 0x44,
                     0xAE, 0x42, 0x60, 0x82,
-                };
-            putBigUint32(self.adler, footer, 1);
-            self:crc32(footer, 1, 4);
-            putBigUint32(self.crc, footer, 5);
-            self:writeBytes(footer)
+                }
+                putBigUint32(self.adler, footer, 1)
+                self:crc32(footer, 1, 4)
+                putBigUint32(self.crc, footer, 5)
+                self:writeBytes(footer)
+                self.done = true
             end
         end
     end
@@ -121,7 +122,7 @@ function Png:adler32(data, index, len)
 end
 
 local function begin(width, height)
-    local state = setmetatable({ width = width, height = height, output = {} }, Png)
+    local state = setmetatable({ width = width, height = height, done = false, output = {} }, Png)
 
     -- Compute and check data siezs
     state.lineSize = width * 3 + 1
