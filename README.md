@@ -13,8 +13,10 @@ png:write { 0xFF, 0, 0 } -- RGB(255, 0, 0) pixel at 0x0
 png:write { 0, 0xFF, 0 } -- RGB(0, 255, 0) pixel at 1x0
 -- TODO: write rest of the pixels to fill rest of the 64x64 canvas
 
+assert(png.done) -- just a failsafe to make sure we've filled the whole allocated PNG space
+
 local data = png.output -- table containing raw PNG data
 ```
 
-Note that the `output` table is populated in streaming fashion as you call `write`. There is no indication of partial PNG file, so you __must__ write all
-the `width * height * 3` bytes before doing anything with the output, unless you're into corrupted PNG files for some reason.
+Note that the `output` table is populated in streaming fashion as you call `write`. You __must__ write all
+the `width * height * 3` bytes before doing anything with the output to make sure the footer is properly written and the PNG file is complete. You can use the `done` flag to make sure you're done writing.
