@@ -121,11 +121,24 @@ function Png:adler32(data, index, len)
     self.adler = bit.bor(bit.lshift(s2, 16), s1)
 end
 
-local function begin(width, height)
+local function begin(width, height, colorMode)
+    -- Default to rgb
+    colorMode = colorMode or "rgb"
+
+    -- Determine bytes per pixel and the PNG internal color type
+    local bytesPerPixel, colorType
+    if colorMode == "rgb" then
+        bytesPerPixel, colorType = 3, 2
+    elseif colorMode == "rgba" then
+        bytesPerPixel, colorType = 4, 6
+    else
+        error("Invalid colorMode")
+    end
+
     local state = setmetatable({ width = width, height = height, done = false, output = {} }, Png)
 
     -- Compute and check data siezs
-    state.lineSize = width * 3 + 1
+    state.lineSize = width * bytesPerPixel + 1
     -- TODO: check if lineSize too big
 
     state.uncompRemain = state.lineSize * height
@@ -146,7 +159,7 @@ local function begin(width, height)
         0x49, 0x48, 0x44, 0x52,
         0, 0, 0, 0,  -- 'width' placeholder
         0, 0, 0, 0,  -- 'height' placeholder
-        0x08, 0x02, 0x00, 0x00, 0x00,
+        0x08, colorType, 0x00, 0x00, 0x00,
         0, 0, 0, 0,  -- IHDR CRC-32 placeholder
         -- IDAT chunk
         0, 0, 0, 0,  -- 'idatSize' placeholder
