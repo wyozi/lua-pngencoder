@@ -1,9 +1,6 @@
 local Png = {}
 Png.__index = Png
 
-PNG_COLOR_TYPE_RGB = 2
-PNG_COLOR_TYPE_RGBA = 6
-
 local DEFLATE_MAX_BLOCK_SIZE = 65535
 
 local function putBigUint32(val, tbl, index)
@@ -124,17 +121,21 @@ function Png:adler32(data, index, len)
     self.adler = bit.bor(bit.lshift(s2, 16), s1)
 end
 
-local function begin(width, height, colorType)
-    local state = setmetatable({ width = width, height = height, done = false, output = {}, colorType = colorType or PNG_COLOR_TYPE_RGB }, Png)
+local function begin(width, height, colorMode)
+    -- Default to rgb
+    colorMode = colorMode or "rgb"
 
-    local bytesPerPixel
-    if state.colorType == PNG_COLOR_TYPE_RGB then
-        bytesPerPixel = 3
-    elseif state.colorType == PNG_COLOR_TYPE_RGBA then
-        bytesPerPixel = 4
+    -- Determine bytes per pixel and the PNG internal color type
+    local bytesPerPixel, colorType
+    if colorMode == "rgb" then
+        bytesPerPixel, colorType = 3, 2
+    elseif colorMode == "rgba" then
+        bytesPerPixel, colorType = 4, 6
     else
-        error("Invalid colorType")
+        error("Invalid colorMode")
     end
+
+    local state = setmetatable({ width = width, height = height, done = false, output = {} }, Png)
 
     -- Compute and check data siezs
     state.lineSize = width * bytesPerPixel + 1
@@ -158,7 +159,7 @@ local function begin(width, height, colorType)
         0x49, 0x48, 0x44, 0x52,
         0, 0, 0, 0,  -- 'width' placeholder
         0, 0, 0, 0,  -- 'height' placeholder
-        0x08, state.colorType, 0x00, 0x00, 0x00,
+        0x08, colorType, 0x00, 0x00, 0x00,
         0, 0, 0, 0,  -- IHDR CRC-32 placeholder
         -- IDAT chunk
         0, 0, 0, 0,  -- 'idatSize' placeholder

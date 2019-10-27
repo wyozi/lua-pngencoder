@@ -27,7 +27,7 @@ It's also possible to write RGBA data:
 ``` lua
 local encode = require "pngencoder"
 
-local png = encode(64, 64, PNG_COLOR_TYPE_RGBA) -- width, height
+local png = encode(64, 64, "rgba") -- width, height, colorMode
 png:write { 0xFF, 0, 0, 0x80 } -- RGB(255, 0, 0, 128) pixel at 0x0 (half transparent)
 png:write { 0, 0xFF, 0, 0 }    -- RGB(0, 255, 0, 0)   pixel at 1x0 (fully transparent)
 -- TODO: write rest of the pixels to fill rest of the 64x64 canvas
